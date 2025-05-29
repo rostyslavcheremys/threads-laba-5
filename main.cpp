@@ -108,16 +108,6 @@ RowMin min_row_sum(int num_threads) {
                 }
             }*/
         }
-
-        if (row_sum < global_min.min_sum) {
-
-            #pragma omp critical
-            {
-                if (row_sum < global_min.min_sum) {
-                    global_min = {i, row_sum};
-                }
-            }
-        }
     }
 
     double end = omp_get_wtime();
