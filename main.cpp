@@ -23,6 +23,8 @@ RowMin min_row_sum(int num_threads);
 int main() {
     init_matrix();
 
+    omp_set_nested(1);
+
     long long total = 0;
     RowMin min_row = {0, LLONG_MAX};
 
