@@ -94,6 +94,7 @@ RowMin min_row_sum(int num_threads) {
 
     for (int i = 0; i < ROWS; i++) {
         long long row_sum = 0;
+
         for (int j = 0; j < COLS; j++) {
             row_sum += matrix[i][j];
         }
