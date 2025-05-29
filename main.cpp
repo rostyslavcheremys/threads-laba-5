@@ -15,6 +15,10 @@ struct RowMin {
     long long min_sum;
 };
 
+#pragma omp declare reduction(min_row : RowMin : \
+omp_out = (omp_in.min_sum < omp_out.min_sum) ? omp_in : omp_out) \
+initializer(omp_priv = { -1, LLONG_MAX })
+
 void init_matrix();
 
 long long total_sum(int num_threads);
@@ -82,30 +86,42 @@ long long total_sum(int num_threads) {
 }
 
 RowMin min_row_sum(int num_threads) {
-    RowMin result = {0, LLONG_MAX};
     double start = omp_get_wtime();
 
-    #pragma omp parallel for num_threads(num_threads)
+    RowMin global_min = {-1, LLONG_MAX};
+
+    #pragma omp parallel for num_threads(num_threads) reduction(min_row:global_min)
 
     for (int i = 0; i < ROWS; i++) {
         long long row_sum = 0;
-
         for (int j = 0; j < COLS; j++) {
             row_sum += matrix[i][j];
         }
 
-        #pragma omp critical
-        {
-            if (row_sum < result.min_sum) {
-                result.min_sum = row_sum;
-                result.row_index = i;
+        if (row_sum < global_min.min_sum) {
+            global_min = {i, row_sum};
+
+            /*#pragma omp critical
+            {
+                if (row_sum < global_min.min_sum) {
+                    global_min = {i, row_sum};
+                }
+            }*/
+        }
+
+        if (row_sum < global_min.min_sum) {
+
+            #pragma omp critical
+            {
+                if (row_sum < global_min.min_sum) {
+                    global_min = {i, row_sum};
+                }
             }
         }
     }
 
     double end = omp_get_wtime();
+    cout << "Min row sum found in " << end - start << " seconds with " << num_threads << " threads." << endl << endl;
 
-    cout << "Min row sum found in " << end - start << " seconds " << "with " << num_threads << " threads." << endl << endl;
-
-    return result;
+    return global_min;
 }
